@@ -71,10 +71,8 @@
       </el-aside>
       <el-main>
       <div class="full-right tab">
-        <el-tabs type="card" tab-position="bottom" class="svgcontain">
+        <el-tabs type="card" tab-position="bottom" class="svgcontain" data-tab="tab_main">
           <el-tab-pane label="图标视图" class="svgbg">
-              <div id="points" class="points">
-              </div>
           </el-tab-pane>
           <el-tab-pane label="xml视图">
               <div id="xmlContainer">
@@ -99,8 +97,10 @@
 <script>
 import $ from 'jquery';
 
+import '../assets/css/flowchart.css';
+
 import * as d3 from 'd3';
-import { component as VueContextMenu } from '@xunlei/vue-context-menu'
+import { component as vuevontextvenu } from '@xunlei/vue-context-menu'
 
 
 export default {
@@ -114,10 +114,132 @@ export default {
     }
   },
   components:{
-    'context-menu': VueContextMenu
+    'context-menu': vuevontextvenu
   },
   methods:{
     IniterCanvas(){
+      // /**
+      //   * [generateUUID 返回一串序列码]
+      //   * @return {String} [uuid]
+      //   */
+        function generateUUID() {
+            var d = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d/16);
+                return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+            });
+            return uuid;
+            }
+          // /**
+          //  * 大小写字母转化
+          //  * @param  {[type]} str  需要转化的字符串	
+          //  * @param  {[type]} type 1: 首字母大写 2：首页母小写 3：大小写转换 4：全部大写 5：全部小写
+          //  * @return {[type]}      转化后的字符串
+          //  * changeCase('asdasd', 1) --> Asdasd
+          //  */
+          function changeCase(str, type) {
+            if (!str) return '';
+              function ToggleCase(str) {
+                  var itemText = "";
+                  str.split("").forEach(
+                      function (item) {
+                          if (/^([a-z]+)/.test(item)) {
+                              itemText += item.toUpperCase();
+                          }
+                          else if (/^([A-Z]+)/.test(item)) {
+                              itemText += item.toLowerCase();
+                          }
+                          else{
+                              itemText += item;
+                          }
+                      });
+                  return itemText;
+              }
+              switch (type) {
+                  case 1:
+                      return str.replace(/^(\w)(\w+)/, function (v, v1, v2) {
+                          return v1.toUpperCase() + v2;
+                      });
+                  case 2:
+                      return str.replace(/^(\w)(\w+)/, function (v, v1, v2) {
+                          return v1.toLowerCase() + v2;
+                      });
+                  case 3:
+                      return ToggleCase(str);
+                  case 4:
+                      return str.toUpperCase();
+                  case 5:
+                      return str.toLowerCase();
+                  default:
+                      return str;
+              }
+          }
+      //获取n以内的随机数
+          function getRandom(n) {
+            return Math.floor(Math.random() * n + 1);
+          }
+
+          /** 
+           * randomWord 产生任意长度随机字母数字组合
+           * randomFlag-是否任意长度 min-任意长度最小位[固定位数] max-任意长度最大位
+           * xuanfeng 2014-08-28
+           */
+          function randomWord(randomFlag, min, max) {
+              var str = "",
+                  range = min,
+                  arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 
+                      /*'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 
+                      'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 
+                      'u', 'v', 'w', 'x', 'y', 'z', */
+                      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 
+                      'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
+                      'U', 'V', 'W', 'X', 'Y', 'Z'];
+              if (randomFlag) {
+                  range = Math.round(Math.random() * (max - min)) + min;
+              }
+              for (var i = 0; i < range; i++) {
+                  let pos = Math.round(Math.random() * (arr.length - 1));
+                  str += arr[pos];
+              }
+              return str;
+          }
+      /**
+       * 生成不重复的序列号
+       */
+      var serial_marker = function() {
+        var prefix = '';
+        var seq = 1;
+        return {
+            set_prefix: function(p) {
+                prefix = String(p);
+            },
+            set_seq: function(s) {
+                seq = s;
+            },
+            gensym: function() {
+                var result = prefix + seq;
+                seq += 1;
+                return result;
+            }
+        };
+      };
+      /* 与 node edge 无关的js */
+      var package_id = '${param.processid}';
+      package_id = package_id.indexOf('Package_') !== -1 ? package_id : 'Package_'+randomWord(false, 8);
+      var workflow_name = '过程';
+      var workflow_id = package_id+'_Wor1';
+      var create_time = new Date();// 需要从xpdl读取
+      var create_type = '${param.kind}';
+      create_type = create_type.indexOf('param.kind') !== -1 ? create_type : 'create';// html防止报错
+      // 定义生成 node id 序列
+      var seqer_nodeID = serial_marker();
+      seqer_nodeID.set_prefix(workflow_id + '_Act');
+
+      // 定义生成 edge id 序列
+      var seqer_edgeID = serial_marker();
+      seqer_edgeID.set_prefix(workflow_id + '_Tra');
+
       /**
        * 存放所有 GraphCreator 对象及方法 
        */
@@ -224,14 +346,11 @@ export default {
                 'y': 15,
                 'fill': '#E1784B'
               });
-          thisGraph.svgG = svg.append("g")
-            .classed(thisGraph.consts.graphClass, true);
+          thisGraph.svgG = svg.append("g").classed(thisGraph.consts.graphClass, true);
           var svgG = thisGraph.svgG;
 
          // displayed when dragging between nodes
-          thisGraph.dragLine = svgG.append('path')
-            .attr('class', 'link dragline hidden')
-            .attr('d', 'M0,0L0,0')
+          thisGraph.dragLine = svgG.append('path').attr('class', 'link dragline hidden').attr('d', 'M0,0L0,0')
             .style('marker-end', 'url(#'+thisGraph.containerId+'-mark-end-arrow)');
 
           // svg nodes and edges
@@ -263,12 +382,16 @@ export default {
                 .on("keyup", function() {
                   thisGraph.svgKeyUp.call(thisGraph);
                 });
+
               svg.on("mousedown", function(d) {
                 thisGraph.svgMouseDown.call(thisGraph, d);
               });
+
               svg.on("mouseup", function(d) {
                 thisGraph.svgMouseUp.call(thisGraph, d);
               });
+
+              console.log(svg);
               svg.on("mousemove", function(d) {
                 thisGraph.show_position.text('pos: '+d3.mouse(svgG.node())[0].toFixed(0)+', '+d3.mouse(svgG.node())[1].toFixed(0));
               });
@@ -309,7 +432,7 @@ export default {
                 .on('dragstart', function(ev) {
                   // $('.full-left').css({cursor: 'no-drop'});
                   $(this).siblings().removeClass('active').end().addClass('active');
-                  $('.full-right>.tab.active .full-right-top').addClass('activate');
+                  $('.full-right .svgbg').addClass('activate');
                   /* 设置拖动过程显示图片
                   var icon = document.createElement('img');
                   icon.src = $(this).find('img').attr('src');
@@ -322,10 +445,10 @@ export default {
                   ev.originalEvent.dataTransfer.setData('tr_data', JSON.stringify(json_obj));
                 })
                 .on('dragend', function(ev) {
-                  $('.full-right>.tab.active .full-right-top').removeClass('activate');
+                  $('.full-right .svgbg').removeClass('activate');
                 }); 
 
-              $('.full-right .tab.active').on('drop', '.svg-container', function(ev) {
+              $('.full-right').on('drop', '.svgbg', function(ev) {
                   ev.stopPropagation(); 
                   ev.preventDefault(); 
                   var position = {
@@ -427,7 +550,578 @@ export default {
                 }
                 return link;
               };
-             // call to propagate changes to graph
+
+
+                // /**
+                //   * 获取此节点的连线
+                //   * @param  {Object} node        此节点
+                //   * @param  {Number} type        -1 连线指向此节点 1 此节点连出 undefined 所有连线
+                //   * @return {Array}  linkedEdges 连线集合
+                //   */
+                  GraphCreator.prototype.getLinkedEdges = function(node, type) {
+                    var thisGraph = this;
+                    var edges = thisGraph.edges;
+                    var linkedEdges;
+                    if (type == -1) {
+                      linkedEdges = edges.filter(function(edge) {
+                        return edge.target == node;
+                      });
+                    }
+                    if (type == 1) {
+                      linkedEdges = edges.filter(function(edge) {
+                        return edge.source == node;
+                      });
+                    }
+                    linkedEdges = edges.filter(function(edge) {
+                      return edge.target == node || edge.source == node;
+                    });
+                    return linkedEdges;
+                  };
+
+                  // /**
+                  //   * 判断node有无连线
+                  //   * @param  {object}  node       节点
+                  //   * @param  {Boolean} isActivity 是否是与activity的连线，true 不包括开始和结束节点
+                  //   * @param  {Boolean} type       连线类型：-1 指向node 0 所有连线 1 从node连出
+                  //   * @return {Boolean}            hasLinked
+                  //   */
+                    GraphCreator.prototype.hasLinked = function(node, isActivity, type) {
+                      var thisGraph = this;
+                      isActivity = isActivity || false;
+                      type = type || 0;
+                      var edges = [];
+                      if (isActivity) {
+                        edges = thisGraph.edges.filter(function(edge, index) {
+                          return edge.source.type == 'activity' && edge.target.type == 'activity';
+                        });
+                      } else {
+                        edges = thisGraph.edges;
+                      }
+                      var hasLinked = edges.some(function(edge, index) {
+                        if (type == 0) {
+                          return edge.source.id == node.id || edge.target.id == node.id;
+                        } else if (type == -1) {
+                          return edge.target.id == node.id;
+                        } else if (type == 1) {
+                          return edge.source.id == node.id;
+                        }
+                      });
+                      return hasLinked;
+                    };
+                  /* PROTOTYPE FUNCTIONS */
+                    GraphCreator.prototype.dragmove = function(d) {
+                      var thisGraph = this;
+                      var drawLine = thisGraph.state.drawLine;
+                      var link;
+                      if (thisGraph.state.shiftNodeDrag || drawLine) {
+                        var svgG = thisGraph.svgG,
+                          dragLine = thisGraph.dragLine;
+                        switch (drawLine) {
+                          case 'NOROUTING': // 直线
+                            link = dragLine.attr('d', 'M' + d.x + ',' + d.y + 'L' + d3.mouse(svgG.node())[0] + ',' + d3.mouse(svgG.node())[1]);
+                            break;
+                          case 'SIMPLEROUTING': // 折线
+                            var des = {
+                              x: d3.mouse(svgG.node())[0], 
+                              y: d3.mouse(svgG.node())[1] 
+                            };
+                            var link_d = thisGraph.getLink_d(d, des);
+                            link = dragLine.attr('d', link_d);
+                            break;
+                        }
+                        refresh(link); // 兼容IE11
+                      } else {
+                        d.x += d3.event.dx;
+                        d.y += d3.event.dy;
+                        thisGraph.updateGraph();
+                        /*
+                        // 防止circle脱出svg范围(放大缩小后还存在问题，待修改...)
+                        var radius = thisGraph.consts.nodeRadius + thisGraph.consts.nodeRadiusVary,
+                          svg_width = $('svg').width(),
+                          svg_heigh = $('svg').height();
+                        d.x = Math.max(Math.min(d3.event.x, svg_width-radius), radius);
+                        d.y = Math.max(Math.min(d3.event.y, svg_heigh-radius), radius);
+                        thisGraph.updateGraph();*/
+                      }
+                    };
+
+              GraphCreator.prototype.deleteGraph = function() {
+                var thisGraph = this;
+                thisGraph.nodes = [];
+                thisGraph.edges = [];
+                thisGraph.updateGraph();
+              };
+
+              /* select all text in element: taken from http://stackoverflow.com/questions/6139107/programatically-select-text-in-a-contenteditable-html-element */
+                GraphCreator.prototype.selectElementContents = function(el) {
+                  var range = document.createRange();
+                  range.selectNodeContents(el);
+                  var sel = window.getSelection();
+                  sel.removeAllRanges();
+                  sel.addRange(range);
+                };
+
+                
+                /* insert svg line breaks: taken from http://stackoverflow.com/questions/13241475/how-do-i-include-newlines-in-labels-in-d3-charts */
+                GraphCreator.prototype.insertTitleLinebreaks = function(gEl, d) {
+                  var words = d.title.split(/\s+/g),
+                    nwords = words.length;
+                  var el = gEl.append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("letter-spacing", "1");
+                  switch (d.type) {
+                    case 'start':
+                    case 'end':
+                      el.attr("dy", "13");
+                      break;
+                    default:
+                      el.attr("dy", "-" + (nwords - 1) * 7.5);
+                      break;
+                  }
+                  for (var i = 0; i < words.length; i++) {
+                    var tspan = el.append('tspan').text(words[i]);
+                    if (i > 0)
+                      tspan.attr('x', 0).attr('dy', '15');
+                  }
+
+                };
+                // remove edges associated with a node
+                GraphCreator.prototype.spliceLinksForNode = function(node) {
+                  var thisGraph = this,
+                    toSplice = thisGraph.edges.filter(function(l) {
+                      return (l.source === node || l.target === node);
+                    });
+                  toSplice.map(function(l) {
+                    thisGraph.edges.splice(thisGraph.edges.indexOf(l), 1);
+                  });
+                };
+
+                GraphCreator.prototype.replaceSelectEdge = function(d3Path, edgeData) {
+                  var thisGraph = this;
+                  d3Path.classed(thisGraph.consts.selectedClass, true);
+                  //修改箭头样式
+                  // d3Path.style('marker-end', 'url(#selected-end-arrow)');
+                  if (thisGraph.state.selectedEdge) {
+                    thisGraph.removeSelectFromEdge();
+                  }
+                  thisGraph.state.selectedEdge = edgeData;
+                };
+
+                GraphCreator.prototype.replaceSelectNode = function(d3Node, nodeData) {
+                  // A circle node has been selected.
+                  var thisGraph = this;
+                  d3Node.classed(this.consts.selectedClass, true);
+                  if (thisGraph.state.selectedNode) {
+                    thisGraph.removeSelectFromNode();
+                  }
+                  thisGraph.state.selectedNode = nodeData;
+                };
+
+                
+                GraphCreator.prototype.removeSelectFromNode = function() {
+                  // A circle node has been deselected.
+
+                  var thisGraph = this;
+                  thisGraph.circles.filter(function(cd) {
+                    return cd.id === thisGraph.state.selectedNode.id;
+                  }).classed(thisGraph.consts.selectedClass, false);
+                  thisGraph.state.selectedNode = null;
+
+                  d3.selectAll("#inspector").remove();
+
+                };
+
+                GraphCreator.prototype.removeSelectFromEdge = function() {
+                  var thisGraph = this;
+                  thisGraph.paths.filter(function(cd) {
+                    return cd === thisGraph.state.selectedEdge;
+                  }).classed(thisGraph.consts.selectedClass, false);
+                  thisGraph.state.selectedEdge = null;
+                };
+
+                  GraphCreator.prototype.pathMouseDown = function(d3path, d) {
+                    var thisGraph = this,
+                      state = thisGraph.state;
+                    d3.event.stopPropagation();
+                    state.mouseDownLink = d;
+
+                    if (state.selectedNode) {
+                      thisGraph.removeSelectFromNode();
+                    }
+
+                    var prevEdge = state.selectedEdge;
+                    if (!prevEdge || prevEdge !== d) {
+                      thisGraph.replaceSelectEdge(d3path, d);
+                    } else {
+                      if(d3.event.button != 2){
+                        thisGraph.removeSelectFromEdge();
+                        // d.style('marker-end', 'url(#end-arrow)');
+                      }
+                    }
+                    if (d3.event.button == 2) {
+                      thisGraph.showMenu();
+                      // thisGraph.menuEvent();
+                    }
+                  };
+
+                    // mousedown on node
+                    GraphCreator.prototype.circleMouseDown = function(d3node, d) {
+                      var thisGraph = this,
+                        state = thisGraph.state;
+                      d3.event.stopPropagation();
+                      state.mouseDownNode = d;
+
+                      if (d3.event.shiftKey || thisGraph.state.drawLine) {
+                        var result = thisGraph.isAllowLinking(d);
+                        if (!result.success) {
+                          layer.msg(result.msg, {time: 2000, icon: 0, offset: '180px'});
+                          return;
+                        }      
+                        // Automatically create node when they shift + drag?
+                        state.shiftNodeDrag = d3.event.shiftKey;
+                        // reposition dragged directed edge
+                        var link = thisGraph.dragLine.classed('hidden', false)
+                          .attr('d', 'M' + d.x + ',' + d.y + 'L' + d.x + ',' + d.y);
+                        refresh(link);// 兼容IE11
+                        return;
+                      }
+                    };
+                    // mouseup on nodes
+                  GraphCreator.prototype.circleMouseUp = function(d3node, d) {
+                    var thisGraph = this,
+                      state = thisGraph.state,
+                      consts = thisGraph.consts;
+                    // reset the states
+                    state.shiftNodeDrag = false;
+                    d3node.classed(consts.connectClass, false);
+
+                    var mouseDownNode = state.mouseDownNode;
+                    if (!mouseDownNode) return;
+
+                    thisGraph.dragLine.classed("hidden", true);
+
+                    if (mouseDownNode !== d) {
+                      var result = thisGraph.isAllowLinked(d, mouseDownNode);
+                      if (!result.success) {
+                        layer.msg(result.msg, {time: 2000, icon: 0, offset: '180px'});
+                        return;
+                      }
+                      // we're in a different node: create new edge for mousedown edge and add to graph
+                      var newEdge = {
+                        edgeId: seqer_edgeID.gensym(),
+                        postCondition: {transitionEventType: 'transitionClass'},
+                        source: mouseDownNode,
+                        target: d,
+                        drawLine: thisGraph.state.drawLine
+                      };
+                      var filtRes = thisGraph.paths.filter(function(d) {
+                        if (d.source === newEdge.target && d.target === newEdge.source) {
+                          thisGraph.edges.splice(thisGraph.edges.indexOf(d), 1);
+                        }
+                        return d.source === newEdge.source && d.target === newEdge.target;
+                      });
+                      if (!filtRes[0].length) {
+                        thisGraph.edges.push(newEdge);
+                        thisGraph.updateGraph();
+                      }
+                    } else {
+                      // we're in the same node
+                      var prevNode = state.selectedNode;
+                      if (state.justDragged) {
+                        // dragged, not clicked
+                        if (state.selectedEdge) {
+                          thisGraph.removeSelectFromEdge();
+                        }
+                        if (!prevNode || prevNode !== d) {
+                          thisGraph.replaceSelectNode(d3node, d);
+                          thisGraph.changePropDiv(d); // 添加更改属性div
+                        } else {
+                          // thisGraph.removeSelectFromNode();
+                        }
+                      
+                      } else {
+                        // clicked, not dragged
+                        if (d3.event.shiftKey) {
+
+                        } else {
+                          if (state.selectedEdge) {
+                            thisGraph.removeSelectFromEdge();
+                          }
+                          if (!prevNode || prevNode !== d) {
+                            thisGraph.replaceSelectNode(d3node, d);
+                            thisGraph.changePropDiv(d); // 添加更改属性div
+                            thisGraph.showMenu();
+                            // thisGraph.menuEvent();
+                          } else {
+                            if (d3.event.button == '2') {
+                              thisGraph.showMenu();
+                              // thisGraph.menuEvent();
+                            } else {
+                              thisGraph.removeSelectFromNode();
+                            }
+                          }
+                        }
+                      }
+                    }
+                    state.mouseDownNode = null;
+                    state.justDragged = false;
+                    return;
+
+                  }; // end of circles mouseup
+
+                  // /**
+                  //   * 判断节点是否允许被连线
+                  //   * @param  {Object}  mouseDownNode 连线开始节点
+                  //   * @param  {Object}  eventNode     连线结束节点
+                  //   * @return {Object}                连线是否成功信息
+                  //   */
+                    GraphCreator.prototype.isAllowLinked = function(eventNode, mouseDownNode) { 
+                      var thisGraph = this;
+                      var result = {
+                        success: true,
+                        msg: ''
+                      };
+                      switch (eventNode.type) {
+                        case 'start':
+                          result.success = false;
+                          result.msg = '不允许';
+                          break;
+                        case 'end':
+                          if (thisGraph.hasLinked(eventNode)) {
+                            result.success = false;
+                            result.msg = '已有连线！';
+                          }
+                          break;
+                      }
+                      switch (mouseDownNode.type) {
+                        case 'start':
+                          if (thisGraph.hasLinked(mouseDownNode)) {
+                            result.success = false;
+                            result.msg = '已有连线！';
+                          }
+                          break;
+                        case 'end':
+                          result.success = false;
+                          result.msg = '不允许';
+                          break;
+                        case 'activity':
+                          var edges = thisGraph.getLinkedEdges(mouseDownNode, 1);
+                          var edgeLinkEnd = edges.filter(function(edge) {
+                            return edge.target.type == 'end';
+                          });
+                          if (edgeLinkEnd.length) {
+                            result.success = false;
+                            result.msg = '活动不能有转出转移！';
+                          }
+                          break;
+                      }
+                      return result;
+                    };
+
+                    // /**
+                    // * 判断节点是否允许连线
+                    // * @param  {Object}  eventNode 出发实践节点对象 
+                    // * @return {Object}            连线是否成功信息
+                    // */
+                    GraphCreator.prototype.isAllowLinking = function(eventNode) {
+                      var thisGraph = this;
+                      var result = {
+                        success: true,
+                        msg: ''
+                      };
+                      switch (eventNode.type) {
+                        case 'start':
+                          if (thisGraph.hasLinked(eventNode)) { 
+                            result.success = false;
+                            result.msg = '已有连线！';
+                          }
+                          break;
+                        case 'end':
+                          result.success = false;
+                          result.msg = '不允许！';
+                          break;
+                        case 'activity':
+                          var edges = thisGraph.getLinkedEdges(eventNode, 1);
+                          var edgeLinkEnd = edges.filter(function(edge) {
+                            return edge.target.type === 'end';
+                          });
+                          if (edgeLinkEnd.length) {
+                            result.success = false;
+                            result.msg = '活动不能有转出转移！';
+                          }
+                        break;
+                      }
+                      return result;
+                    };
+
+              GraphCreator.prototype.updateWindow = function(svg) {
+                var docEl = document.documentElement,
+                  bodyEl = document.getElementsByTagName('body')[0];
+                var x = window.innerWidth || docEl.clientWidth || bodyEl.clientWidth;
+                var y = window.innerHeight || docEl.clientHeight || bodyEl.clientHeight;
+                svg.attr("width", x).attr("height", y);
+              };
+              /**
+                * 创建子流程graph对象
+                */
+                GraphCreator.prototype.createSubGraph = function() {
+                  var thisGraph = this;
+                  var containerId = d3.select('.full-right').attr('data-tab');
+                    // activitySetId = d3.select('.full-right>.menu>.item.active').attr('activitysetid');
+
+                  var svg = d3.select('.full-right .svgbg').append("svg")
+                    .attr("width", "100%")
+                    .attr("height", "100%");
+                  /*
+                  var editedBlockNode = graph_main.nodes.find(function(node) {
+                    return (node.component == 'blockActivity' && node.activitySet.activitySetId == activitySetId);
+                  });*/
+                  var editedBlockNode = thisGraph.state.selectedNode;
+
+                  var subGraph = editedBlockNode.activitySet.graphCreator;
+                  var pools = graphPool.pools;
+                  var isExist = pools.indexOf(subGraph);
+                  if (isExist === -1) {
+                    var graph_active;
+                    if (subGraph) {
+                      graph_active = new GraphCreator(containerId, svg, subGraph.nodes, subGraph.edges, subGraph.participants);
+                    } else {
+                      graph_active = new GraphCreator(containerId, svg, [], [], []);
+                      editedBlockNode.activitySet.graphCreator = graph_active;
+                    } 
+                    pools.push(graph_active);
+                    graphPool.updateGraphActiveById(containerId);
+                    graph_active.updateGraph();
+                  }
+                };
+            GraphCreator.prototype.createNode = function(data) {
+                var node;
+                switch (data.type) {
+                  case 'activity':
+                    node = {
+                      id: seqer_nodeID.gensym(),
+                      title: data.text,
+                      component: data.component,
+                      type: data.type,
+                      x: data.x,
+                      y: data.y,
+                      conventional: {
+                        MustActivity: true, 
+                        taskAssign: 'taskAutoMode', 
+                        autoAcceptAllAssignments: true, 
+                        isResponsible: true,
+                        startMode: 'manual',
+                        finishMode: 'manual'
+                      },
+                      frontCondition: {},
+                      postCondition: {},
+                      extendAttr: [],
+                      highLevel: {},
+                      timeoutLimit: {},
+                      monitorinf: {isResponsibleTem: true},
+                      eventTypeId: null
+                    };
+                    if (data.component == 'blockActivity') {
+                      node.activitySet = {
+                        activitySetId: seqer_blockId.gensym(),
+                        graphCreator: null
+                      };
+                    }
+                    break;
+                  default: // 开始、结束节点
+                    node = {
+                      id: generateUUID(),
+                      title: data.text,
+                      component: data.component,
+                      type: data.type,
+                      x: data.x,
+                      y: data.y
+                    };
+                    break;
+                }
+                return node;
+              };
+              // mouseup on main svg
+            GraphCreator.prototype.svgMouseUp = function() {
+              var thisGraph = this,
+                state = thisGraph.state;
+              if (state.justScaleTransGraph) {
+                // dragged not clicked
+                state.justScaleTransGraph = false;
+              } else if (state.graphMouseDown && d3.event.shiftKey) {
+                // clicked not dragged from svg
+                var xycoords = d3.mouse(thisGraph.svgG.node()),
+                  d = {
+                    id: seqer_nodeID.gensym(),
+                    title: '普通活动',
+                    component: 'ordinaryActivity',
+                    type: 'activity',
+                    x: xycoords[0],
+                    y: xycoords[1],
+                    conventional: {
+                      MustActivity: true, 
+                      taskAssign: 'taskAutoMode', 
+                      autoAcceptAllAssignments: true, 
+                      isResponsible: true,
+                      startMode: 'manual',
+                      finishMode: 'manual'
+                    },
+                    frontCondition: {},
+                    postCondition: {},
+                    extendAttr: [],
+                    highLevel: {},
+                    timeoutLimit: {},
+                    monitorinf: {isResponsibleTem: true},
+                    eventTypeId: null
+                  };
+                thisGraph.nodes.push(d);
+                thisGraph.updateGraph();
+              } else if (state.shiftNodeDrag || state.drawLine) {
+                // dragged from node
+                state.shiftNodeDrag = false;
+                thisGraph.dragLine.classed("hidden", true);//win7 IE11下存在bug
+              }
+              state.graphMouseDown = false;
+            };
+
+              // keydown on main svg
+              GraphCreator.prototype.svgKeyDown = function() {
+                var thisGraph = this,
+                  state = thisGraph.state,
+                  consts = thisGraph.consts;
+                // make sure repeated key presses don't register for each keydown
+                if (state.lastKeyDown !== -1) return;
+
+                state.lastKeyDown = d3.event.keyCode;
+                var selectedNode = state.selectedNode,
+                  selectedEdge = state.selectedEdge;
+                /*
+                switch (d3.event.keyCode) {
+                  //case consts.BACKSPACE_KEY:
+                  case consts.DELETE_KEY:
+                    d3.event.preventDefault();
+                    if (selectedNode) {
+                      thisGraph.nodes.splice(thisGraph.nodes.indexOf(selectedNode), 1);
+                      thisGraph.spliceLinksForNode(selectedNode);
+                      state.selectedNode = null;
+                      thisGraph.updateGraph();
+                      // thisGraph.
+                    } else if (selectedEdge) {
+                      thisGraph.edges.splice(thisGraph.edges.indexOf(selectedEdge), 1);
+                      state.selectedEdge = null;
+                      thisGraph.updateGraph();
+                    }
+                    break;
+                }*/
+              };
+                GraphCreator.prototype.svgKeyUp = function() {
+                  this.state.lastKeyDown = -1;
+                };
+                  // mousedown on main svg
+                GraphCreator.prototype.svgMouseDown = function() {
+                  this.state.graphMouseDown = true;
+                };
+                        // call to propagate changes to graph
             GraphCreator.prototype.updateGraph = function() {
               var thisGraph = this,
                 consts = thisGraph.consts,
@@ -589,6 +1283,55 @@ export default {
               });
               return linkedEdges;
             };
+              // /**
+              //   * 根据缩放比例和偏移量转换坐标
+              //   * @param  {DOM}    svgContainer .svgContainer元素
+              //   * @param  {Object} position     位置坐标
+              //   * @return {Object} position     转换后的坐标
+              //   */
+                GraphCreator.prototype.parsePosition = function(svgContainer, position) {
+                  var transform = $(svgContainer).find('.graph').attr('transform'); // transform="translate(20,11) scale(1)"
+                    if (transform) {
+                      var result = []; // ['20,11', '1']
+                      var regExp_ = /\(([^)]*)\)/g;
+                      var ele;
+                      while ((ele=regExp_.exec(transform)) != null) {
+                        result.push(ele[1]);
+                      }
+                      var translate = result[0] && result[0].split(/,|\s/) || [0, 0]; // IE11 result[0] 为 '23.45 22.87'
+                      var scale = result[1] && result[1].split(',')[0] || 1;
+                      if (translate.length == 1 && translate[0] == 0) { // 兼容IE11
+                        translate.push(0);
+                      }
+                      position.x = (position.x - translate[0])/scale;
+                      position.y = (position.y - translate[1])/scale;
+                    }
+                    return position;
+                };
+               //更改属性div
+              GraphCreator.prototype.changePropDiv = function(d) {
+                var thisGraph = this;
+                $('.component-prop').empty().append(
+                    '<div>' + 
+                    '  <div name="id" class="prop-value"><span>id:</span><span>' + d.id + '</span></div>'+
+                    '  <div name="name" class="prop-value"><span>名称:</span><span>' + d.title + '</span></div>'+
+                    '</div>' +
+                    '<div class="clearfix"></div>'+
+                    '<div> ' +
+                    '  <div name="type" class="prop-value"><span>类型:</span><span>' + d.component + '</span></div>'+
+                    '  <div name="" class="prop-value"><span>执行者:</span><span>无</span></div>' +
+                    '</div>' +
+                    '<div class="clearfix"></div>');
+              };
+              GraphCreator.prototype.zoomed = function() {
+                  this.state.justScaleTransGraph = true;
+                  var translate = this.dragSvg.translate();
+                  var scale = this.dragSvg.scale();
+                  if (!translate[0]) translate = [0, 0];
+                  if (!scale) scale = 1;
+                  d3.select(".full-right>.tab.active ." + this.consts.graphClass)
+                    .attr("transform", "translate(" + translate + ") scale(" + scale + ")");
+                };
         /**** MAIN ****/
           var container = d3.select('.svgbg').node(),
             containerId = 'tab_main';
@@ -671,5 +1414,8 @@ export default {
     }
     .svgcontain .el-tab-pane{
       height: 50vh;
+    }
+    .conceptG text{
+      pointer-events: none;
     }
 </style>
