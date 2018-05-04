@@ -118,6 +118,29 @@ export default {
   },
   methods:{
     IniterCanvas(){
+      /**
+       * 左侧组件
+       */
+      function handleComponentsBtn() {
+        $(this).siblings().removeClass('active').end().addClass('active');
+        var graph_active = graphPool.getGraphByActiveEdit(),
+          state = graph_active.state,
+          nodeName = $(this).attr('name'),
+          container = $('.svg-container');
+        if (nodeName === 'NOROUTING' || nodeName === 'SIMPLEROUTING') {
+          state.drawLine = nodeName;
+          container.on('mouseover mouseout', '.conceptG', function(e) {
+            if (e.type === 'mouseover') {
+              this.style.cursor = 'crosshair';
+            } else if (e.type == 'mouseout') {
+              this.style.cursor = 'default';
+            }
+          });
+        } else {
+          container.off('mouseover mouseout', '.conceptG');
+          state.drawLine = null;
+        }
+      }
       // /**
       //   * [generateUUID 返回一串序列码]
       //   * @return {String} [uuid]
@@ -1344,6 +1367,7 @@ export default {
           window.graph_main = new GraphCreator(containerId, svg, initialDate.nodes, initialDate.edges, initialDate.participants);
           graphPool.pools.push(graph_main);
           graph_main.updateGraph();
+           $('#flowComponents .components-btn').on('click', handleComponentsBtn);
     },
     initFlowChart(){
       var initialDate = {
