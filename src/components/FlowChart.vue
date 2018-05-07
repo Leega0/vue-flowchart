@@ -84,13 +84,11 @@
       </el-main>
       </el-container>
     </el-container>
-    <context-menu class="right-menu" 
-      :target="contextMenuTarget" 
-      :show="contextMenuVisible" 
-      @update:show="(show) => contextMenuVisible = show">
-      <a href="javascript:;">配置</a>
-      <a href="javascript:;">删除</a>
-    </context-menu>
+    <!-- 右键菜单 -->
+      <div id="rMenu" class="rmenu">
+        <a class="item" name="removeMenu">删除</a>
+        <a class="item" name="propMenu">属性</a>
+      </div>
   </div>
 </template>
 
@@ -107,8 +105,8 @@ export default {
   name: 'flowchart',
   data () {
     return {
-      contextMenuTarget: document.body,
-      contextMenuVisible: false,
+      // contextMenuTarget: document.body,
+      // contextMenuVisible: false,
       data:{
     },      
     }
@@ -141,6 +139,28 @@ export default {
           state.drawLine = null;
         }
       }
+      function handleRightMenu() {
+        var graph_active = graphPool.getGraphByActiveEdit();
+        var item = $(this).attr('name');
+        var selectedNode = graph_active.state.selectedNode,
+        selectedEdge = graph_active.state.selectedEdge;
+        switch (item) {
+          case 'removeMenu':
+            handleDeleteNode();
+            break;
+          case 'propMenu':
+            if (selectedNode) {
+              handleNodeMenuProp();
+            } else if (selectedEdge) {
+              handleEdgeMenuProp();
+            }
+            break;
+        }
+        $('#rMenu').hide();
+      }
+      $('#rMenu').on('mouseleave', function() {
+          $('#rMenu').hide();
+        });
       // /**
       //   * [generateUUID 返回一串序列码]
       //   * @return {String} [uuid]
@@ -365,7 +385,7 @@ export default {
            thisGraph.svg = svg;
            thisGraph.show_position = svg.append("text")
               .attr({
-                'x': 1107,
+                'x': 800,
                 'y': 15,
                 'fill': '#E1784B'
               });
@@ -414,7 +434,6 @@ export default {
                 thisGraph.svgMouseUp.call(thisGraph, d);
               });
 
-              console.log(svg);
               svg.on("mousemove", function(d) {
                 thisGraph.show_position.text('pos: '+d3.mouse(svgG.node())[0].toFixed(0)+', '+d3.mouse(svgG.node())[1].toFixed(0));
               });
@@ -480,7 +499,6 @@ export default {
                   };
 
                   position = thisGraph.parsePosition(this, position);
-
                   var data = JSON.parse(ev.originalEvent.dataTransfer.getData('tr_data'));
                   data = $.extend(data, position);
                   var node = thisGraph.createNode(data);
@@ -493,6 +511,45 @@ export default {
                   ev.preventDefault();
                 });
               };
+              // 右击显示菜单
+              GraphCreator.prototype.showMenu = function() {
+                var thisGraph = this;
+                $('#flowComponents div[name=selectBtn]').trigger('click'); 
+                thisGraph.circles.style({'cursor': 'default'}); // 防止在活动块上右击存在问题
+                var selectedNode = thisGraph.state.selectedNode,
+                  selectedEdge = thisGraph.state.selectedEdge;
+                if (selectedNode) {
+                  if (selectedNode.type == 'activity') {
+                    $('#rMenu a[name=propMenu]').show();
+                    if (selectedNode.component == 'blockActivity') {
+                      $('#rMenu a[name=editMenu]').show();
+                    } else {
+                      $('#rMenu a[name=editMenu]').hide();
+                    }
+                  } else {
+                    $('#rMenu a[name=propMenu]').hide();
+                    $('#rMenu a[name=editMenu]').hide();
+                  }
+                } else if (selectedEdge) {
+                  var sourceType = selectedEdge.source.type,
+                    targetType = selectedEdge.target.type;
+                  $('#rMenu a[name=editMenu]').hide();
+                  if (sourceType == 'start' || targetType == 'end') {
+                    $('#rMenu a[name=propMenu]').hide();
+                  } else {
+                    $('#rMenu a[name=propMenu]').show();
+                  }
+                }
+                d3.select("#rMenu").style({ 
+                  "top": (d3.event.clientY-2)+"px", 
+                  "left": (d3.event.clientX-2)+"px", 
+                  "display": "block" 
+                });
+                d3.select('#rMenu').on('contextmenu', function() {
+                  d3.event.preventDefault();
+                });
+              };
+
              GraphCreator.prototype.consts = {
               selectedClass: "selected",
               connectClass: "connect-node",
@@ -797,7 +854,8 @@ export default {
                       if (d3.event.shiftKey || thisGraph.state.drawLine) {
                         var result = thisGraph.isAllowLinking(d);
                         if (!result.success) {
-                          layer.msg(result.msg, {time: 2000, icon: 0, offset: '180px'});
+                          
+                          alert(result.msg);
                           return;
                         }      
                         // Automatically create node when they shift + drag?
@@ -826,7 +884,7 @@ export default {
                     if (mouseDownNode !== d) {
                       var result = thisGraph.isAllowLinked(d, mouseDownNode);
                       if (!result.success) {
-                        layer.msg(result.msg, {time: 2000, icon: 0, offset: '180px'});
+                        alert(result.msg);
                         return;
                       }
                       // we're in a different node: create new edge for mousedown edge and add to graph
@@ -1361,7 +1419,7 @@ export default {
 
           var svg = d3.select('.svgbg').append("svg")
             .attr("width", "100%")
-            .attr("height", container.clientHeight);
+            .attr("height", "100%");
 
           var initialDate = this.initFlowChart();
           window.graph_main = new GraphCreator(containerId, svg, initialDate.nodes, initialDate.edges, initialDate.participants);
@@ -1386,6 +1444,11 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+    #rMenu {
+          position: absolute;
+          width: 82px !important;
+          display: none;
+      }
     .right-menu {
       position: fixed;
       background: #fff;
