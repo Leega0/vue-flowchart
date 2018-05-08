@@ -58,11 +58,17 @@
           <div class="components-btn" name="endComponent" type="end" draggable="true" data-show="E">
             <div><span>结束</span></div>
           </div>
-          <div class="components-btn" name="ordinaryActivity" type="activity" draggable="true" data-show="新闻抓取">
+          <div class="components-btn" name="ordinaryActivity" type="activity" draggable="true" data-show="新闻抓取" instanceid="12123">
             <div><span>新闻抓取</span></div>
           </div>
-         <div class="components-btn" name="blockActivity" type="activity" draggable="true" data-show="翻译服务">
+           <div class="components-btn" name="ordinaryActivity" type="activity" draggable="true" data-show="新闻过滤">
+            <div><span>新闻过滤</span></div>
+          </div>
+          <div class="components-btn" name="ordinaryActivity" type="activity" draggable="true" data-show="翻译服务">
             <div><span>翻译服务</span></div>
+          </div>
+         <div class="components-btn" name="ordinaryActivity" type="activity" draggable="true" data-show="语义分析">
+            <div><span>语义分析</span></div>
           </div>
           <div class="components-btn noComponent" name="NOROUTING">
             <div><span>转移</span></div>
@@ -89,6 +95,9 @@
         <a class="item" name="removeMenu">删除</a>
         <a class="item" name="propMenu">属性</a>
       </div>
+      <el-dialog title="服务流" :visible.sync="attrdialog">
+        {{attrObj}}
+      </el-dialog>
   </div>
 </template>
 
@@ -98,24 +107,24 @@ import $ from 'jquery';
 import '../assets/css/flowchart.css';
 
 import * as d3 from 'd3';
-import { component as vuevontextvenu } from '@xunlei/vue-context-menu'
-
 
 export default {
   name: 'flowchart',
   data () {
     return {
-      // contextMenuTarget: document.body,
-      // contextMenuVisible: false,
-      data:{
-    },      
+      attrdialog:false,
+      attrObj:''
     }
   },
-  components:{
-    'context-menu': vuevontextvenu
-  },
   methods:{
+    showMessage(msg){
+        this.$message({
+           message: msg,
+           type: 'warning'
+        })
+    },
     IniterCanvas(){
+      var elem = this;
       /**
        * 左侧组件
        */
@@ -124,7 +133,7 @@ export default {
         var graph_active = graphPool.getGraphByActiveEdit(),
           state = graph_active.state,
           nodeName = $(this).attr('name'),
-          container = $('.svg-container');
+          container = $('.svgbg');
         if (nodeName === 'NOROUTING' || nodeName === 'SIMPLEROUTING') {
           state.drawLine = nodeName;
           container.on('mouseover mouseout', '.conceptG', function(e) {
@@ -139,6 +148,60 @@ export default {
           state.drawLine = null;
         }
       }
+      // 右键属性弹窗编辑
+      function handleNodeMenuProp() {
+          var graph_active = graphPool.getGraphByActiveEdit();
+          var selectedNode = graph_active.state.selectedNode;
+          elem.attrdialog = true;
+          elem.attrObj = selectedNode;
+        }
+      // 右键连线弹窗
+        function handleEdgeMenuProp() {
+            var graph_active = graphPool.getGraphByActiveEdit();
+            var selectedEdge = graph_active.state.selectedEdge;
+          }
+      /**
+      * 工具栏-删除节点
+      */
+      function handleDeleteNode() {
+        var graph_active = graphPool.getGraphByActiveEdit();
+        var selectedNode = graph_active.state.selectedNode,
+          selectedEdge = graph_active.state.selectedEdge;
+        if (!selectedNode && !selectedEdge) {
+          elem.showMessage("请选中元素！");
+          return;
+        } else {
+          elem.$confirm('确定要删除选择元素吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          if (selectedNode) {
+              var nodes = graph_active.nodes;
+              nodes.splice(nodes.indexOf(selectedNode), 1);
+              graph_active.spliceLinksForNode(selectedNode);
+              if (selectedNode.component === 'blockActivity') {
+                var containerId = 'tab_'+selectedNode.id;
+                $('.full-right [data-tab='+containerId+']').remove();
+                graphPool.removeGraphFromPools(containerId);
+              }
+              selectedNode = null;
+              graph_active.updateGraph();
+            } else if (selectedEdge) {
+              var edges = graph_active.edges;
+              edges.splice(edges.indexOf(selectedEdge), 1);
+              selectedEdge = null;
+              graph_active.updateGraph();
+            }
+          elem.$message({
+            type: 'info',
+            message: '删除成功'
+          });  
+        }).catch(() => {
+                  
+        });
+        }
+}
       function handleRightMenu() {
         var graph_active = graphPool.getGraphByActiveEdit();
         var item = $(this).attr('name');
@@ -152,12 +215,14 @@ export default {
             if (selectedNode) {
               handleNodeMenuProp();
             } else if (selectedEdge) {
-              handleEdgeMenuProp();
+              // 暂时屏蔽连线的属性操作
+              // handleEdgeMenuProp();
             }
             break;
         }
         $('#rMenu').hide();
       }
+      $('#rMenu .item').on('click', handleRightMenu);
       $('#rMenu').on('mouseleave', function() {
           $('#rMenu').hide();
         });
@@ -482,7 +547,8 @@ export default {
                   var json_obj = {
                     text: $(this).attr('data-show'),
                     component: $(this).attr('name'),
-                    type: $(this).attr('type')
+                    type: $(this).attr('type'),
+                    instanceid:$(this).attr('instanceid'),
                   };
                   ev.originalEvent.dataTransfer.setData('tr_data', JSON.stringify(json_obj));
                 })
@@ -855,7 +921,10 @@ export default {
                         var result = thisGraph.isAllowLinking(d);
                         if (!result.success) {
                           
-                          alert(result.msg);
+                          elem.$message({
+                            type: 'info',
+                            message: result.msg
+                          });
                           return;
                         }      
                         // Automatically create node when they shift + drag?
@@ -884,13 +953,15 @@ export default {
                     if (mouseDownNode !== d) {
                       var result = thisGraph.isAllowLinked(d, mouseDownNode);
                       if (!result.success) {
-                        alert(result.msg);
+                        elem.$message({
+                            type: 'info',
+                            message: result.msg
+                          });
                         return;
                       }
                       // we're in a different node: create new edge for mousedown edge and add to graph
                       var newEdge = {
                         edgeId: seqer_edgeID.gensym(),
-                        postCondition: {transitionEventType: 'transitionClass'},
                         source: mouseDownNode,
                         target: d,
                         drawLine: thisGraph.state.drawLine
@@ -1083,22 +1154,10 @@ export default {
                       id: seqer_nodeID.gensym(),
                       title: data.text,
                       component: data.component,
+                      instanceid:data.instanceid,
                       type: data.type,
                       x: data.x,
                       y: data.y,
-                      conventional: {
-                        MustActivity: true, 
-                        taskAssign: 'taskAutoMode', 
-                        autoAcceptAllAssignments: true, 
-                        isResponsible: true,
-                        startMode: 'manual',
-                        finishMode: 'manual'
-                      },
-                      frontCondition: {},
-                      postCondition: {},
-                      extendAttr: [],
-                      highLevel: {},
-                      timeoutLimit: {},
                       monitorinf: {isResponsibleTem: true},
                       eventTypeId: null
                     };
@@ -1139,19 +1198,6 @@ export default {
                     type: 'activity',
                     x: xycoords[0],
                     y: xycoords[1],
-                    conventional: {
-                      MustActivity: true, 
-                      taskAssign: 'taskAutoMode', 
-                      autoAcceptAllAssignments: true, 
-                      isResponsible: true,
-                      startMode: 'manual',
-                      finishMode: 'manual'
-                    },
-                    frontCondition: {},
-                    postCondition: {},
-                    extendAttr: [],
-                    highLevel: {},
-                    timeoutLimit: {},
                     monitorinf: {isResponsibleTem: true},
                     eventTypeId: null
                   };
@@ -1219,13 +1265,6 @@ export default {
                 .classed(consts.selectedClass, function(d) {
                   return d === state.selectedEdge;
                 })
-                .attr("conditype", function(d) {
-                  if (d.postCondition) {
-                    return changeCase(d.postCondition.conditype, 5);
-                  } else {
-                    return '';
-                  }
-                })
                 .attr("d", function(d) {
                   if (d.drawLine == 'NOROUTING') {
                     return "M" + d.source.x + "," + d.source.y + "L" + d.target.x + "," + d.target.y;
@@ -1249,13 +1288,6 @@ export default {
                 .append("path")
                 .style('marker-end', 'url(#'+thisGraph.containerId+'-end-arrow)')
                 .classed("link", true)
-                .attr("conditype", function(d) {
-                  if (d.postCondition) {
-                    return changeCase(d.postCondition.conditype, 5);
-                  } else {
-                    return '';
-                  }
-                })
                 .attr("d", function(d) {
                   if (d.drawLine == 'NOROUTING') {
                     return "M" + d.source.x + "," + d.source.y + "L" + d.target.x + "," + d.target.y;
