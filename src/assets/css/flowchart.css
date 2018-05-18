@@ -1,135 +1,280 @@
-                marker{
-                  fill: #3c39f2;
-                }
+.ui.menu {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    font-family: Lato,'Helvetica Neue',Arial,Helvetica,sans-serif;
+    background: #fff;
+    font-weight: 400;
+    -webkit-box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
+    box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
+    min-height: 2.85714286em;
+}
+.ui.menu .item {
+    position: relative;
+    vertical-align: middle;
+    line-height: 1;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    background: 0 0;
+    padding: .92857143em 1.14285714em;
+    text-transform: none;
+    color: rgba(0,0,0,.87);
+    font-weight: 400;
+    -webkit-transition: background .1s ease,color .1s ease,-webkit-box-shadow .1s ease;
+    transition: background .1s ease,color .1s ease,-webkit-box-shadow .1s ease;
+    transition: background .1s ease,box-shadow .1s ease,color .1s ease;
+    transition: background .1s ease,box-shadow .1s ease,color .1s ease,-webkit-box-shadow .1s ease;
+}
+.full-right>.menu>.item {
+    padding: 0.8em 1.0em !important;
+}
+.ui.menu:not(.vertical) .item {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+.ui.tabular.menu .item {
+    background: 0 0;
+    border-bottom: none;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+    border-top: 2px solid transparent;
+    padding: .92857143em 1.42857143em;
+    color: rgba(0,0,0,.87);
+}
+.ui.tabular.menu .active.item {
+    background: none #fff;
+    color: rgba(0,0,0,.95);
+    border-top-width: 1px;
+    border-color: #d4d4d5;
+    font-weight: 700;
+    margin-bottom: -1px;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border-radius: .28571429rem .28571429rem 0 0!important;
+}
+marker{
+  fill: #3c39f2;
+}
 
-                g.conceptG circle{
-                  fill: #F6FBFF;
-                  stroke: #6164c1;
-                  stroke-width: 1px;
-                }
+g.conceptG circle{
+  fill: #F6FBFF;
+  stroke: #6164c1;
+  stroke-width: 1px;
+}
 
-                g.conceptG:hover circle{
-                  fill: rgb(200, 238, 241);
-                }
+g.conceptG:hover circle{
+  fill: rgb(200, 238, 241);
+}
 
-                g.selected circle{
-                  fill: #e8d0ef;
-                  stroke: #9b78d3;
-                  stroke-width: 1.5px;
-                }
-                g.selected:hover circle{
-                  fill: #e8d0ef;
-                }
-                g.conceptG text{    
-                  font-size: 12px;
-                  fill: #151996;
-                }
+g.selected circle{
+  fill: #409EFF;
+  stroke: #9b78d3;
+  stroke-width: 1.5px;
+}
+g.selected:hover circle{
+  fill: #409EFF;
+}
+g.conceptG text{    
+  font-size: 12px;
+  fill: #151996;
+}
+g.selected text{
+  fill: #fff;
+}
 
-                path.link {
-                  fill: none;
-                  stroke: #a6a6f2;
-                  stroke-width: 2px;
-                  cursor: default;
-                }
+path.link {
+  fill: none;
+  stroke: #a6a6f2;
+  stroke-width: 2px;
+  cursor: default;
+}
 
-                path.link:hover{
-                  stroke: rgb(94, 196, 204) !important;
-                }
+path.link:hover{
+  stroke: rgb(94, 196, 204) !important;
+}
 
-                path.link[conditype=otherwise] {
-                  stroke: #ffaf6c;
-                }
+path.link[conditype=otherwise] {
+  stroke: #ffaf6c;
+}
 
-                path.link[conditype=exception] {
-                  stroke: #e98c99; 
-                }
+path.link[conditype=exception] {
+  stroke: #e98c99; 
+}
 
-                path.link[conditype=workflowbean], path.link[conditype=tache] {
-                  stroke: #232fc1;
-                }
+path.link[conditype=workflowbean], path.link[conditype=tache] {
+  stroke: #232fc1;
+}
 
-                path.link[conditype=condition], path.link[conditype=userdefine], path.link[conditype=custom] {
-                  stroke: #a6a6f2;
-                }
+path.link[conditype=condition], path.link[conditype=userdefine], path.link[conditype=custom] {
+  stroke: #a6a6f2;
+}
 
-                path.link[conditype=defaultexception] {
-                  stroke: #de4c4c;
-                }
+path.link[conditype=defaultexception] {
+  stroke: #de4c4c;
+}
 
-                g.connect-node circle{
-                  fill: #BEFFFF;
-                }
+g.connect-node circle{
+  fill: #BEFFFF;
+}
 
-                path.link.hidden{
-                  stroke-width: 0;
-                  display: none
-                }
+path.link.hidden{
+  stroke-width: 0;
+  display: none
+}
 
-                path.link.selected {
-                  stroke: #9b78d3;
-                }
+path.link.selected {
+  stroke: #9b78d3;
+}
 
-                g.start circle {
-                  fill: #59828c !important;
-                  stroke: #fff;
-                  stroke-width: 0px;
-                }
+g.start circle {
+  fill: #59828c !important;
+  stroke: #fff;
+  stroke-width: 0px;
+}
 
-                g.start text {
-                  font-family: trebuche;
-                  font-size: 37px;
-                  fill: #fff;
-                  font-weight: 550;
-                }
+g.start text {
+  font-family: trebuche;
+  font-size: 37px;
+  fill: #fff;
+  font-weight: 550;
+}
 
-                g.end circle {
-                  fill: #9D5644 !important;
-                  stroke: #fff;
-                  stroke-width: 0px;
-                }
+g.end circle {
+  fill: #9D5644 !important;
+  stroke: #fff;
+  stroke-width: 0px;
+}
 
-                g.end text {
-                  font-family: trebuche;
-                  font-size: 37px;
-                  fill: #fff;
-                  font-weight: 550;
-                }
-                .rmenu{
-                  -webkit-box-orient: vertical;
-                  -webkit-box-direction: normal;
-                  flex-direction: column;
-                  background: #fff;
-                  box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
-                  font-weight: 400;
-                  border: 1px solid rgba(34,36,38,.15);
-                  border-radius: .28571429rem;
-                  min-height: 2.85714286em;
-                  font-size: .78571429rem;
-                }
-                .rmenu .item {
-                    display: block;
-                    background: 0 0;
-                    border-top: none;
-                    border-right: none;
-                    position: relative;
-                    vertical-align: middle;
-                    line-height: 1;
-                    text-decoration: none;
-                    -webkit-tap-highlight-color: transparent;
-                    -webkit-box-flex: 0;
-                    flex: 0 0 auto;
-                    user-select: none;
-                    padding: .92857143em 1.14285714em;
-                    text-transform: none;
-                    color: rgba(0,0,0,.87);
-                    font-weight: 400;
-                    transition: background .1s ease,box-shadow .1s ease,color .1s ease,-webkit-box-shadow .1s ease;
-                }
-                .rmenu a.item:hover {
-                    cursor: pointer;
-                    background: rgba(0,0,0,.03);
-                    color: rgba(0,0,0,.95);
-                }
-                .rmenu>.item:first-child {
-                    border-radius: .28571429rem .28571429rem 0 0;
-                }
+g.end text {
+  font-family: trebuche;
+  font-size: 37px;
+  fill: #fff;
+  font-weight: 550;
+}
+.rmenu{
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
+  font-weight: 400;
+  border: 1px solid rgba(34,36,38,.15);
+  border-radius: .28571429rem;
+  min-height: 2.85714286em;
+  font-size: .78571429rem;
+}
+.rmenu .item {
+  display: block;
+  background: 0 0;
+  border-top: none;
+  border-right: none;
+  position: relative;
+  vertical-align: middle;
+  line-height: 1;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-box-flex: 0;
+  flex: 0 0 auto;
+  user-select: none;
+  padding: .92857143em 1.14285714em;
+  text-transform: none;
+  color: rgba(0,0,0,.87);
+  font-weight: 400;
+  transition: background .1s ease,box-shadow .1s ease,color .1s ease,-webkit-box-shadow .1s ease;
+}
+.rmenu a.item:hover {
+  cursor: pointer;
+  background: rgba(0,0,0,.03);
+  color: rgba(0,0,0,.95);
+}
+.rmenu>.item:first-child {
+  border-radius: .28571429rem .28571429rem 0 0;
+}
+#rMenu {
+  position: absolute;
+  width: 82px !important;
+  display: none;
+}
+.right-menu {
+  position: fixed;
+  background: #fff;
+  border: solid 1px rgba(0, 0, 0, .2);
+  border-radius: 3px;
+  z-index: 999;
+  display: none;
+  border: 1px solid #eee;
+  box-shadow: 0 0.5em 1em 0 rgba(0,0,0,.1);
+  border-radius: 1px;
+}
+.right-menu a {
+  width: 75px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  display: block;
+  color: #1a1a1a;
+  text-decoration: none;
+  padding: 2px;
+}
+.right-menu a:hover{
+  color:#fff;
+  background: #409EFF;
+}
+.subheader {
+  height: 5vh;
+  min-height: 50px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #58a5f3;
+  padding:5px 0 5px 20px;
+}
+.full-right-top {
+  background-image: url(data:image/gif;base64,R0lGODlhCgAKAIAAAPPz89/f3ywAAAAACgAKAAACEQyOaJnL515ksz11YQah+18AADs=)!important;
+  box-sizing: border-box;
+  border: 1px dashed #FFF;
+}
+
+.full-left {
+  height:86vh ;
+  padding: 5px;
+  box-sizing: border-box;
+  border-right: 1px solid #58a5f3;
+}
+.components-btn{
+  box-sizing: border-box;
+  padding-left: 10px;
+  cursor: pointer;
+}
+.noComponent{
+  cursor: default;
+}
+.components-btn:hover{
+  background: #e6e7f5;
+  border-radius: 3px;
+}
+.components-btn div{
+  line-height: 30px;
+  height: 30px;
+}
+.full-right{
+  height: 75vh;
+}
+.svgheight{
+  height: 100%;
+}
+.svg-container{
+  height: 100%
+}
+.conceptG text{
+  pointer-events: none;
+}
