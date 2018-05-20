@@ -165,20 +165,13 @@
 </template>
 
 <script>
-import {
-  page,
-  addObj,
-  getObj,
-  delObj,
-  putObj
-} from "@/api/turing-tasker/taskerRule/index";
+
 import $ from "jquery";
 
 import "@/assets/flowchart/flowchart.css";
 
 import * as d3 from "d3";
 
-import { mapGetters } from "vuex";
 export default {
   name: "taskerRule",
   data() {
@@ -548,6 +541,108 @@ export default {
         var data = {
           nodes: graph_main.nodes
         };
+        var ordinaryxml = "",blockxml="",currtext="",start="",last="",group="",end="";
+        // var jsonToxml = function(node){
+        //   for(i in node){
+        //     if(node[i].component=="ordinaryActivity"){
+        //       ordinaryxml=`<MQServiceLiu code="${node[i].code}" name="${node[i].name}" mode="${node[i].mode}" stopWhenFinish="${node[i].stopWhenFinish}" stopWhenError="${node[i].stopWhenError}">
+        //                   <routing_key>${node[i].attr.routing_key}</routing_key>
+        //                   <instance_id>${node[i].attr.instance_id}</instance_id>
+        //                   <center_name>${node[i].attr.center_name}</center_name>
+        //                       <application_name>${node[i].attr.application_name}</application_name>
+        //                 </MQServiceLiu>`;
+        //      currtext += ordinaryxml; 
+        //     }
+        //     if(node[i].component=="blockActivity"){
+        //         var s = `<GroupServiceLiu code="${node[i].code}" name="${node[i].name}" mode="${node[i].mode}" stopWhenFinish="${node[i].stopWhenFinish}" stopWhenError="${node[i].stopWhenError}">`
+        //         var e = '</GroupServiceLiu>';
+        //         currtext=s+currtext+e;
+        //         jsonToxml(node[i].activitySet.graphCreator.nodes)
+        //     }
+        //     if(node[i].component=="subFlowActivity"){
+        //          apinodes=`<APIServiceLiu code="${node[i].code}" name="${node[i].name}" mode="${node[i].mode}" stopWhenFinish="${node[i].stopWhenFinish}" stopWhenError="${node[i].stopWhenError}">
+        //                 <url>${node[i].attr.url}</url>
+        //                 <application_name>${node[i].attr.application_name}</application_name>
+        //                 <instance_id>${node[i].attr.instance_id}</instance_id>
+        //         <center_name>${node[i].attr.center_name}</center_name>
+        //             </APIServiceLiu>`
+        //             currtext += apinodes;
+        //     }
+        //   }
+        // }
+        data.nodes.forEach(function(node) {
+          if(node.component=="ordinaryActivity"){
+              ordinaryxml=`<MQServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">
+                          <routing_key>${node.attr.routing_key}</routing_key>
+                          <instance_id>${node.attr.instance_id}</instance_id>
+                          <center_name>${node.attr.center_name}</center_name>
+                              <application_name>${node.attr.application_name}</application_name>
+                        </MQServiceLiu>`;
+             currtext += ordinaryxml; 
+          }
+          if(node.component=="blockActivity"){
+              var s = `<GroupServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">`
+              var cojb = node.activitySet.graphCreator.nodes;
+              var e = '</GroupServiceLiu>';
+              var cnodes = "",currtexts="";
+              cojb.forEach(function(cnode){
+                if(cnode.component=="subFlowActivity"){
+                  cnodes=`<APIServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">
+                        <url>${cnode.attr.url}</url>
+                        <application_name>${cnode.attr.application_name}</application_name>
+                        <instance_id>${cnode.attr.instance_id}</instance_id>
+                <center_name>${cnode.attr.center_name}</center_name>
+                    </APIServiceLiu>`
+                    currtexts += cnodes;
+                }
+                if(cnode.component=="ordinaryActivity"){
+                    cnodes=`<MQServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">
+                                <routing_key>${cnode.attr.routing_key}</routing_key>
+                                <instance_id>${cnode.attr.instance_id}</instance_id>
+                                <center_name>${cnode.attr.center_name}</center_name>
+                                    <application_name>${cnode.attr.application_name}</application_name>
+                              </MQServiceLiu>`;
+                  currtext += cnodes; 
+                }
+                if(cnode.component=="blockActivity"){
+              var s = `<GroupServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">`
+              var cojb = cnode.activitySet.graphCreator.nodes;
+              var e = '</GroupServiceLiu>';
+              var ccnodes = "",ccurrtexts="";
+              cojb.forEach(function(ccnode){
+                if(ccnode.component=="subFlowActivity"){
+                  ccnodes=`<APIServiceLiu code="${ccnode.code}" name="${ccnode.name}" mode="${ccnode.mode}" stopWhenFinish="${ccnode.stopWhenFinish}" stopWhenError="${ccnode.stopWhenError}">
+                        <url>${ccnode.attr.url}</url>
+                        <application_name>${ccnode.attr.application_name}</application_name>
+                        <instance_id>${ccnode.attr.instance_id}</instance_id>
+                <center_name>${ccnode.attr.center_name}</center_name>
+                    </APIServiceLiu>`
+                    currtexts += cnodes;
+                }
+                if(ccnode.component=="ordinaryActivity"){
+                    ccnodes=`<MQServiceLiu code="${ccnode.code}" name="${ccnode.name}" mode="${ccnode.mode}" stopWhenFinish="${ccnode.stopWhenFinish}" stopWhenError="${ccnode.stopWhenError}">
+                                <routing_key>${ccnode.attr.routing_key}</routing_key>
+                                <instance_id>${ccnode.attr.instance_id}</instance_id>
+                                <center_name>${ccnode.attr.center_name}</center_name>
+                                    <application_name>${ccnode.attr.application_name}</application_name>
+                              </MQServiceLiu>`;
+                  currtext += ccnodes; 
+                }
+
+              })
+              group=s+currtexts+e;
+             currtext += group; 
+          }
+
+              })
+              group=s+currtexts+e;
+             currtext += group; 
+          }
+          last = start+currtext+end;
+        });
+        start = '<StartServiceLiu name="测试名">';
+        end = "</StartServiceLiu>"
+        console.log(start+last+end);
         console.log(JSON.stringify(data));
       });
       /**
