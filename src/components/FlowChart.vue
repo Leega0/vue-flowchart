@@ -41,9 +41,16 @@
         </div>
       </el-aside>
       <el-main>
-        <el-button type="primary" id="exportjson">导出</el-button>
-        <el-tabs type="card" tab-position="bottom">
-          <el-tab-pane label="拖拽视图">
+        <el-row>
+          <el-col :span="4"><el-input v-model="liuname" placeholder="请输入服务流名称"></el-input></el-col>
+          <el-col :span="8" class="slidermargin">
+            <span class="demstration">定时执行任务</span>
+            <el-slider v-model="looptime" :step="10" class="timesliderbar"></el-slider>
+          </el-col>
+        <el-col :span="2"><el-button type="primary" id="exportjson">保存到xml编辑器</el-button></el-col>
+        </el-row>
+        <el-tabs type="card" tab-position="bottom" v-model="activeName" @tab-click="handleClick">
+          <el-tab-pane label="拖拽视图" name="svgtab">
             <div class="full-right tab clearfix">
               <div class="ui top attached tabular mini menu closemenu">
                 <a class="item active" data-tab="tab_main">
@@ -57,9 +64,10 @@
               </div>
             </div>
           </el-tab-pane>
-          <el-tab-pane label="xml编辑视图">
+          <el-tab-pane label="xml编辑视图" name="xmltab">
             <div id="xmlContainer">
-              321
+              <el-button type="primary" @click="saverule">保存到服务器</el-button>
+             <editor :value="code" :style="styleConfig" :config="editConfig"></editor>
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -165,6 +173,15 @@
 </template>
 
 <script>
+import {
+  page,
+  addObj,
+  getObj,
+  delObj,
+  putObj
+} from "@/api/turing-tasker/taskerRule/index";
+import $eventBus from '@/store/bus.js';
+import editor from '@/components/Brace/editor';
 
 import $ from "jquery";
 
@@ -172,12 +189,20 @@ import "@/assets/flowchart/flowchart.css";
 
 import * as d3 from "d3";
 
+import { mapGetters } from "vuex";
 export default {
   name: "taskerRule",
+  components:{
+    editor
+  },
   data() {
     return {
       attrdialog: false,
+      looptime:10,
       formLabelWidth: '120px',
+      liuname:"",
+      xmlcode:"",
+      activeName:'svgtab',
       form:{
         component:undefined,
         name:undefined,
@@ -192,15 +217,145 @@ export default {
           routing_key:undefined,
           instance_id:undefined
         }
+      },
+      code: '',
+      editConfig: {
+        language: 'xml',//编辑器语言
+        theme: 'monokai',//编辑器主题
+        fontsize: '16',//编辑器字体大小
+        enableBasicAutocompletion: true,//以下三项:编辑器是否自动补全（包括本行）
+        enableSnippets: true,
+        enableLiveAutocompletion: true,
+        wrapLimitRange1: null,
+        wrapLimitRange2: null,
+        isWrap: true,//是否换行
+        isShowPrintMargin: false,//是否显示格式垂线
+        isReadonly: false,//是否只读
+        placeholder: '请输入代码！'//为空时的提示
+      },
+      styleConfig: {
+        width: '100%',
+        minHeight: '100%',
+        border: '1px solid #ddd'
+      },
+      editorConfigData: {
+        themeList: [
+                    {
+                        value: 'chrome',
+                        label: 'chrome'
+                    },
+                    {
+                        value: 'monokai',
+                        label: 'monokai'
+                    },
+                    {
+                        value: 'clouds',
+                        label: 'clouds'
+                    },
+                    {
+                        value: 'dawn',
+                        label: 'dawn'
+                    },
+                    {
+                        value: 'eclipse',
+                        label: 'eclipse'
+                    },
+                    {
+                        value: 'github',
+                        label: 'github'
+                    },
+                    {
+                        value: 'terminal',
+                        label: 'terminal'
+                    },
+                    {
+                        value: 'sqlserver',
+                        label: 'sqlserver'
+                    },
+                    {
+                        value: 'tomorrow',
+                        label: 'tomorrow'
+                    }
+                ],
+        langList: [
+                    {
+                        value: 'sql',
+                        label: 'sql'
+                    },
+                    {
+                        value: 'javascript',
+                        label: 'javascript'
+                    },
+                    
+                    {
+                        value: 'java',
+                        label: 'java'
+                    },
+          {
+            value: 'xml',
+            label: 'xml'
+          }
+        ],
+        fontList: [
+          {
+                        value: '10',
+                        label: '10'
+                    },
+                    {
+            value: '12',
+                        label: '12'
+          },
+          {
+            value: '14',
+                        label: '14'
+          },
+          {
+            value: '16',
+                        label: '16'
+          },
+          {
+            value: '18',
+                        label: '18'
+          },
+          {
+            value: '20',
+                        label: '20'
+          },
+          {
+            value: '24',
+                        label: '24'
+          }
+        ],
+        isReadonly: '否'
       }
     };
   },
   methods: {
+    saverule(){
+         var saveobj = {};
+         saveobj.mqQueue = String(this.looptime);
+         saveobj.apiMethod = this.code;
+         addObj(saveobj).then(response => {
+            this.$notify({
+              title: "成功",
+              message: "创建成功",
+              type: "success",
+              duration: 2000
+            });
+          });
+        },
     showMessage(msg) {
       this.$message({
         message: msg,
         type: "warning"
       });
+    },
+    handleClick() {
+      if(this.activeName=="xmltab"){
+          $eventBus.$emit('updatecode',this.xmlcode)
+        // $('#exportjson').trigger("click");
+
+      }
     },
     editeform(){
         this.attrdialog = false;
@@ -327,7 +482,7 @@ export default {
           selectedNode.stopWhenFinish = elem.form.stopWhenFinish;
           selectedNode.stopWhenError = elem.form.stopWhenError;
 
-          console.log(elem.form);
+         // console.log(elem.form);
           if(elem.form.attr.url){
             selectedNode.attr["url"] = elem.form.attr.url;
           }
@@ -541,109 +696,110 @@ export default {
         var data = {
           nodes: graph_main.nodes
         };
-        var ordinaryxml = "",blockxml="",currtext="",start="",last="",group="",end="";
-        // var jsonToxml = function(node){
-        //   for(i in node){
-        //     if(node[i].component=="ordinaryActivity"){
-        //       ordinaryxml=`<MQServiceLiu code="${node[i].code}" name="${node[i].name}" mode="${node[i].mode}" stopWhenFinish="${node[i].stopWhenFinish}" stopWhenError="${node[i].stopWhenError}">
-        //                   <routing_key>${node[i].attr.routing_key}</routing_key>
-        //                   <instance_id>${node[i].attr.instance_id}</instance_id>
-        //                   <center_name>${node[i].attr.center_name}</center_name>
-        //                       <application_name>${node[i].attr.application_name}</application_name>
-        //                 </MQServiceLiu>`;
-        //      currtext += ordinaryxml; 
-        //     }
-        //     if(node[i].component=="blockActivity"){
-        //         var s = `<GroupServiceLiu code="${node[i].code}" name="${node[i].name}" mode="${node[i].mode}" stopWhenFinish="${node[i].stopWhenFinish}" stopWhenError="${node[i].stopWhenError}">`
-        //         var e = '</GroupServiceLiu>';
-        //         currtext=s+currtext+e;
-        //         jsonToxml(node[i].activitySet.graphCreator.nodes)
-        //     }
-        //     if(node[i].component=="subFlowActivity"){
-        //          apinodes=`<APIServiceLiu code="${node[i].code}" name="${node[i].name}" mode="${node[i].mode}" stopWhenFinish="${node[i].stopWhenFinish}" stopWhenError="${node[i].stopWhenError}">
-        //                 <url>${node[i].attr.url}</url>
-        //                 <application_name>${node[i].attr.application_name}</application_name>
-        //                 <instance_id>${node[i].attr.instance_id}</instance_id>
-        //         <center_name>${node[i].attr.center_name}</center_name>
-        //             </APIServiceLiu>`
-        //             currtext += apinodes;
-        //     }
-        //   }
-        // }
-        data.nodes.forEach(function(node) {
-          if(node.component=="ordinaryActivity"){
-              ordinaryxml=`<MQServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">
-                          <routing_key>${node.attr.routing_key}</routing_key>
-                          <instance_id>${node.attr.instance_id}</instance_id>
-                          <center_name>${node.attr.center_name}</center_name>
-                              <application_name>${node.attr.application_name}</application_name>
-                        </MQServiceLiu>`;
-             currtext += ordinaryxml; 
-          }
-          if(node.component=="blockActivity"){
-              var s = `<GroupServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">`
-              var cojb = node.activitySet.graphCreator.nodes;
-              var e = '</GroupServiceLiu>';
-              var cnodes = "",currtexts="";
-              cojb.forEach(function(cnode){
-                if(cnode.component=="subFlowActivity"){
-                  cnodes=`<APIServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">
-                        <url>${cnode.attr.url}</url>
-                        <application_name>${cnode.attr.application_name}</application_name>
-                        <instance_id>${cnode.attr.instance_id}</instance_id>
-                <center_name>${cnode.attr.center_name}</center_name>
-                    </APIServiceLiu>`
-                    currtexts += cnodes;
-                }
-                if(cnode.component=="ordinaryActivity"){
-                    cnodes=`<MQServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">
-                                <routing_key>${cnode.attr.routing_key}</routing_key>
-                                <instance_id>${cnode.attr.instance_id}</instance_id>
-                                <center_name>${cnode.attr.center_name}</center_name>
+        var liuname = elem.liuname;
+        var ordinaryxml = "",blockxml="",apixml="",currtext="",start="",last="",group="",end="",cgroup="";
+        var jsonToxml = function(nodes){
+            nodes.forEach(function(node) {
+              // mq流
+                if(node.component=="ordinaryActivity"){
+                  ordinaryxml=`\n<MQServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">
+                  <routing_key>${node.attr.routing_key}</routing_key>
+                  <instance_id>${node.attr.instance_id}</instance_id>
+                  <center_name>${node.attr.center_name}</center_name>
+                  <application_name>${node.attr.application_name}</application_name>
+                </MQServiceLiu>`;
+                currtext += ordinaryxml; 
+              }
+              // 组服务流
+              if(node.component=="blockActivity"){
+                  var s = `\n<GroupServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">`
+                  var cojb = node.activitySet.graphCreator.nodes;
+                  var e = '\n</GroupServiceLiu>';
+                  var cnodes = "",currtexts="",cordinaryxml="";
+                  cojb.forEach(function(cnode){
+                    // 组服务流嵌套
+                    // api服务流
+                    if(cnode.component=="subFlowActivity"){
+                        cnodes=`\n<APIServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">
+                                    <url>${cnode.attr.url}</url>
                                     <application_name>${cnode.attr.application_name}</application_name>
-                              </MQServiceLiu>`;
-                  currtext += cnodes; 
-                }
-                if(cnode.component=="blockActivity"){
-              var s = `<GroupServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">`
-              var cojb = cnode.activitySet.graphCreator.nodes;
-              var e = '</GroupServiceLiu>';
-              var ccnodes = "",ccurrtexts="";
-              cojb.forEach(function(ccnode){
-                if(ccnode.component=="subFlowActivity"){
-                  ccnodes=`<APIServiceLiu code="${ccnode.code}" name="${ccnode.name}" mode="${ccnode.mode}" stopWhenFinish="${ccnode.stopWhenFinish}" stopWhenError="${ccnode.stopWhenError}">
-                        <url>${ccnode.attr.url}</url>
-                        <application_name>${ccnode.attr.application_name}</application_name>
-                        <instance_id>${ccnode.attr.instance_id}</instance_id>
-                <center_name>${ccnode.attr.center_name}</center_name>
-                    </APIServiceLiu>`
-                    currtexts += cnodes;
-                }
-                if(ccnode.component=="ordinaryActivity"){
-                    ccnodes=`<MQServiceLiu code="${ccnode.code}" name="${ccnode.name}" mode="${ccnode.mode}" stopWhenFinish="${ccnode.stopWhenFinish}" stopWhenError="${ccnode.stopWhenError}">
-                                <routing_key>${ccnode.attr.routing_key}</routing_key>
-                                <instance_id>${ccnode.attr.instance_id}</instance_id>
-                                <center_name>${ccnode.attr.center_name}</center_name>
-                                    <application_name>${ccnode.attr.application_name}</application_name>
-                              </MQServiceLiu>`;
-                  currtext += ccnodes; 
-                }
-
-              })
-              group=s+currtexts+e;
-             currtext += group; 
+                                    <instance_id>${cnode.attr.instance_id}</instance_id>
+                                    <center_name>${cnode.attr.center_name}</center_name>
+                                </APIServiceLiu>`
+                          currtexts += cnodes;
+                      }
+                      // mq流
+                      if(cnode.component=="ordinaryActivity"){
+                          cordinaryxml=`\n<MQServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">
+                                          <routing_key>${cnode.attr.routing_key}</routing_key>
+                                          <instance_id>${cnode.attr.instance_id}</instance_id>
+                                          <center_name>${cnode.attr.center_name}</center_name>
+                                          <application_name>${cnode.attr.application_name}</application_name>
+                                        </MQServiceLiu>`;
+                        currtexts += cordinaryxml; 
+                      }
+                      // 二层组服务流
+                      if(cnode.component=="blockActivity"){
+                        var cs = `\n<GroupServiceLiu code="${cnode.code}" name="${cnode.name}" mode="${cnode.mode}" stopWhenFinish="${cnode.stopWhenFinish}" stopWhenError="${cnode.stopWhenError}">`
+                        var ccojb = cnode.activitySet.graphCreator.nodes;
+                        var ce = '\n</GroupServiceLiu>';
+                        var ccnodes = "",ccurrtexts="",ccordinaryxml="";
+                           ccojb.forEach(function(ccnode){
+                                if(ccnode.component=="subFlowActivity"){
+                                  ccnodes=`\n<APIServiceLiu code="${ccnode.code}" name="${ccnode.name}" mode="${ccnode.mode}" stopWhenFinish="${ccnode.stopWhenFinish}" stopWhenError="${ccnode.stopWhenError}">
+                                              <url>${ccnode.attr.url}</url>
+                                              <application_name>${ccnode.attr.application_name}</application_name>
+                                              <instance_id>${ccnode.attr.instance_id}</instance_id>
+                                              <center_name>${ccnode.attr.center_name}</center_name>
+                                          </APIServiceLiu>`
+                                    ccurrtexts += ccnodes;
+                                }
+                                // mq流
+                                if(ccnode.component=="ordinaryActivity"){
+                                    cordinaryxml=`\n<MQServiceLiu code="${ccnode.code}" name="${ccnode.name}" mode="${ccnode.mode}" stopWhenFinish="${ccnode.stopWhenFinish}" stopWhenError="${ccnode.stopWhenError}">
+                                                      <routing_key>${ccnode.attr.routing_key}</routing_key>
+                                                      <instance_id>${ccnode.attr.instance_id}</instance_id>
+                                                      <center_name>${ccnode.attr.center_name}</center_name>
+                                                      <application_name>${ccnode.attr.application_name}</application_name>
+                                                  </MQServiceLiu>`;
+                                  ccurrtexts += ccordinaryxml; 
+                                }
+                                if(ccnode.component=="blockActivity"){
+                                  return
+                                }
+                           });
+                        cgroup = cs+ccurrtexts+ce;
+                        currtexts+=cgroup;
+                      }
+                  });
+                  group=s+currtexts+e;
+                  currtext += group; 
+              }
+              // api服务流
+              if(node.component=="subFlowActivity"){
+                        apixml=`\n<APIServiceLiu code="${node.code}" name="${node.name}" mode="${node.mode}" stopWhenFinish="${node.stopWhenFinish}" stopWhenError="${node.stopWhenError}">
+                              <url>${node.attr.url}</url>
+                              <application_name>${node.attr.application_name}</application_name>
+                              <instance_id>${node.attr.instance_id}</instance_id>
+                              <center_name>${node.attr.center_name}</center_name>
+                          </APIServiceLiu>`
+                          currtext += apixml;
+              }
+          });
+          start = `<?xml version="1.0" encoding="utf-8"?>\n<StartServiceLiu name="${liuname}">`;
+          end = "\n</StartServiceLiu>"
+          // 生成xml文件
+          if(elem.liuname==""){
+            elem.$message("请填写流名称！")
           }
-
-              })
-              group=s+currtexts+e;
-             currtext += group; 
+          if(elem.looptime<10){
+            elem.$message("循环时间过小！")
           }
-          last = start+currtext+end;
-        });
-        start = '<StartServiceLiu name="测试名">';
-        end = "</StartServiceLiu>"
-        console.log(start+last+end);
-        console.log(JSON.stringify(data));
+          elem.xmlcode = String(start+currtext+end);
+        }
+        jsonToxml(data.nodes);
+        
+        //console.log(JSON.stringify(data));
       });
       /**
        * 生成不重复的序列号
@@ -2351,8 +2507,57 @@ export default {
       return initialDate;
     }
   },
+  beforeMount () {
+    $eventBus.$on('init', () => {
+      require('brace/mode/sql');
+      require('brace/mode/javascript');
+      require('brace/mode/java');
+      require('brace/mode/xml');
+      require('brace/snippets/sql');
+      require('brace/snippets/javascript');
+      require('brace/snippets/java');
+      require('brace/snippets/xml');
+      require('brace/theme/chrome');
+      require('brace/theme/monokai');
+      require('brace/theme/clouds');
+      require('brace/theme/dawn');
+      require('brace/theme/eclipse');
+      require('brace/theme/github');
+      require('brace/theme/terminal');
+      require('brace/theme/sqlserver');
+      require('brace/theme/tomorrow');
+      require('brace/ext/language_tools');
+    });
+  },
   mounted() {
     this.IniterCanvas();
+    $eventBus.$on('updatecode', (val) => {
+      this.code = val;
+    });
+  },
+  watch: {
+    'editorConfigData.isReadonly': {
+      handler: function(val){
+        if(val === '否'){
+          this.editConfig.isReadonly = false
+        }else{
+          this.editConfig.isReadonly = true
+        }
+      }
+    }
   }
 };
 </script>
+<style scoped>
+  .slidermargin{
+    padding: 0 20px;
+  }
+  .demstration{
+    font-size: 14px;
+    line-height: 38px;
+  }
+  .timesliderbar{
+    float:right;
+    width: 70%;
+  }
+</style>
